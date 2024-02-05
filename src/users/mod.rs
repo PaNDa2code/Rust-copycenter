@@ -9,7 +9,7 @@ pub struct User {
     }
 
 impl User{
-    fn user_from_row(qr: &postgres::Row) -> User {
+    fn from_row(qr: &postgres::Row) -> User {
         User {
             id: qr.get(0),
             full_name: qr.get(1),
@@ -28,9 +28,9 @@ impl User{
             WHERE
                 user_name = $1
             ;
-        ";
+            ";
         let row = client.query_one(query, &[&username])?;
-        Ok(User::user_from_row(&row))
+        Ok(User::from_row(&row))
     }
 }
 
@@ -45,7 +45,7 @@ pub struct Customer {
 pub fn fetch_users() -> Result<Vec<User>, Error> {
     let mut client = the_client()?;
     let rows = client.query("SELECT * FROM users;", &[])?;
-    let users: Vec<User> = rows.iter().map(|row| User::user_from_row(row)).collect();
+    let users: Vec<User> = rows.iter().map(|row| User::from_row(row)).collect();
     Ok(users)
 }
 

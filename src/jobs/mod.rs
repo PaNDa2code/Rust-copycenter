@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use std::mem;
 use time::PrimitiveDateTime;
 
+
 #[derive(Debug, ToSql, FromSql)]
 #[postgres(name = "jop_type")]
 pub enum JopType {
@@ -69,9 +70,9 @@ impl Job {
             match file_id {
                 Some(id) => {
                     Some(PrintingFile {
-                        file_id: Some(id),
+                        file_id: id,
                         file_name: row.get(12),
-                        file_checksum_sha_264: row.get(13),
+                        file_checksum_sha_256: row.get(13),
                         file_type: row.get(14),
                         file_dir: row.get(15),
                         file_pages_count: row.get(16),
@@ -131,8 +132,8 @@ impl Job {
         let mut client = the_client()?;
         
         let file_id = match &self.file {
-            Some(file) => {file.file_id}
-            None => None
+            Some(file) => {Some(file.file_id)}
+            None => {None}
         };
 
         client.execute(query, &[
@@ -170,7 +171,7 @@ pub fn fetch_jobs() -> Result<Vec<Job>, postgres::Error> {
                 jop_done,
                 file_id,
                 file_name,
-                file_checksum_sha_264,
+                file_checksum_sha_256,
                 file_type,
                 file_dir,
                 file_pages_count,

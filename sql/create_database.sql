@@ -27,11 +27,13 @@ CREATE TABLE users (
 CREATE TABLE files (
   file_id SERIAL PRIMARY KEY,
   file_type file_type,
-  file_checksum_SHA_264 varchar(64),
-  file_name varchar(40),
-  file_dir varchar(50),
+  file_checksum_SHA_256 varchar(64) UNIQUE,
+  file_name varchar(50),
+  file_dir varchar(150),
   file_pages_count int
 );
+
+CREATE INDEX idx_file_checksum_sha_256 ON files(file_checksum_SHA_256);
 
 CREATE TABLE jobs (
   jop_id SERIAL PRIMARY KEY,
