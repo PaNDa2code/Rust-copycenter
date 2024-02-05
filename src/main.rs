@@ -16,10 +16,10 @@ use files::*;
 #[allow(unused_imports)]
 use jobs::*;
 
+
 fn main(){
 
-    let file = PrintingFile::new("/home/panda/Downloads/document.pdf")
-                .expect("Can't make new PrintingFile");
+    let file = PrintingFile::new("/home/panda/Downloads/blank.pdf");
     println!("{:?}", file);
 }
 

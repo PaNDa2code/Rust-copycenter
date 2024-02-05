@@ -1,10 +1,10 @@
 use crate::files::*;
-
+use crate::errors::ErrorCode;
 use std::{fs::{copy, create_dir, remove_file}, path::Path};
 use crate::{config::the_client, config::STORAGE_PATH};
 
 impl PrintingFile {
-    pub fn new(file_path: &str) -> Result<Self, u8> {
+    pub fn new(file_path: &str) -> Result<Self, ErrorCode> {
         let path = Path::new(file_path);
 
         let file_ext = path.extension().and_then(|x| x.to_str()).unwrap_or("");
@@ -27,19 +27,18 @@ impl PrintingFile {
         if file_check.is_some() {
             let file = file_check.unwrap();
             eprintln!("Error: File is already there ==> {:?}", file);
-            return Err(50);
+            return Err(ErrorCode::FileAlreadyExists);
         }
 
         // move the file to the storage
 
         let store_dir = format!("{}/{}", STORAGE_PATH, file_checksum_sha_256);
         let store_dir_path = Path::new(&store_dir);
-        println!("{:?}", store_dir_path);
         match create_dir(&store_dir_path) {
             Ok(_) => {}
             Err(err) => {
                 eprintln!("Error creating storage dir: {}", err);
-                return Err(22);
+                return Err(ErrorCode::StorageDirCreationFailed);
             }
         }
 
@@ -50,7 +49,7 @@ impl PrintingFile {
             Ok(_) =>  {}
             Err(err) => {
                 eprintln!("Error copying storage dir: {}", err);
-                return Err(27);
+                return Err(ErrorCode::FileCopyFailed);
             }
         }
 
@@ -58,11 +57,11 @@ impl PrintingFile {
             Ok(_) => {}
             Err(err) => {
                 eprintln!("Can't remove the file from it's old path: {}", err);
-                return Err(41);
+                return Err(ErrorCode::FileRemoveFailed);
             }
         }
 
-        file_dir = store_file_path.to_str().unwrap().to_string();
+        file_dir = store_dir_path.to_str().unwrap().to_string();
 
 
         let mut client = the_client().unwrap();
@@ -70,10 +69,10 @@ impl PrintingFile {
         let query = "
             INSERT INTO
                 files(
-                    file_name, file_dir, file_checksum_SHA_256, file_pages_count
+                    file_name, file_type, file_dir, file_checksum_SHA_256, file_pages_count
                 )
                 VALUES(
-                    $1, $2, $3, $4
+                    $1, $2, $3, $4, $5
                 )
             RETURNING
                 file_id
@@ -81,12 +80,11 @@ impl PrintingFile {
         ";
         let row = client.query_one(query, &[
             &file_name,
+            &file_type,
             &file_dir,
             &file_checksum_sha_256,
             &file_pages_count
         ]);
-
-        println!("{:?}", row);
 
         match row {
             Ok(r) => {
@@ -103,7 +101,7 @@ impl PrintingFile {
             }
             Err(err) => {
                 eprintln!("Error retrieving the row: {}", err);
-                Err(60)
+                Err(ErrorCode::RowRetrievalFailed)
             }
         }
         

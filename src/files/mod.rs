@@ -1,6 +1,10 @@
 mod enums;
 mod functions;
 mod new;
+pub mod errors;
+
+
+
 use functions::*;
 pub use enums::*;
 pub use new::*;
