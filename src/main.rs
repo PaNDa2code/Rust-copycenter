@@ -1,12 +1,11 @@
 #![allow(dead_code)]
 
-use std::{fs::File, io::Write};
-
-
 mod users;
 mod files;
 mod jobs;
 mod config;
+
+
 
 
 #[allow(unused_imports)]
@@ -18,8 +17,7 @@ use jobs::*;
 
 
 fn main(){
-
-    let file = PrintingFile::new("/home/panda/Downloads/blank.pdf");
+    let file = PrintingFile::new("/home/panda/Downloads/document.pdf");
     println!("{:?}", file);
 }
 

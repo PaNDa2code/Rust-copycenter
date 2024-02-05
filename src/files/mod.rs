@@ -5,13 +5,24 @@ pub mod errors;
 
 
 
-use functions::*;
+// use functions::*;
 pub use enums::*;
 pub use new::*;
 use std::io::Read;
 use pdf::file::FileOptions;
 use sha256;
 use crate::config::the_client;
+
+
+#[derive(Debug)]
+pub struct PrintingFile {
+    pub file_id: i32,
+    pub file_type: FileType,
+    pub file_checksum_sha_256: String,
+    pub file_name: String,
+    pub file_dir: String,
+    pub file_pages_count: i32
+}
 
 
 impl PrintingFile {
@@ -50,6 +61,7 @@ impl PrintingFile {
         let mut file = std::fs::File::open(file_path).expect("Failed to open file");
         let mut file_buffer = Vec::new();
         file.read_to_end(&mut file_buffer).expect("Failed to read file");
+        #[allow(deprecated)]
         sha256::digest_bytes(&file_buffer)
     }
 

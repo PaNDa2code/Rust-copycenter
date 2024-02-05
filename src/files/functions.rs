@@ -26,15 +26,3 @@ pub fn fetch_files() -> Result<Vec<PrintingFile>, postgres::Error> {
 
     Ok(files)
 }
-
-pub fn get_next_id() -> Result<i32, postgres::Error> {
-    let mut client = the_client()?;
-
-    let query = "SELECT last_value from files_file_id_seq;";
-
-    let row = client.query_one(query, &[])?;
-
-    let last_id: i32 = row.get(0);
-
-    Ok(last_id + 1)
-}
