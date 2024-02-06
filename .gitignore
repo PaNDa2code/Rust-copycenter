@@ -1,2 +1,4 @@
 /target
 src/config.rs
+/test_dir
+/.vscode

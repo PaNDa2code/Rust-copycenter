@@ -1,6 +1,6 @@
 use crate::files::*;
 use crate::errors::ErrorCode;
-use std::{fs::{copy, create_dir, remove_file}, path::Path};
+use std::{fs::{copy, create_dir, remove_file, rename}, path::Path};
 use crate::{config::the_client, config::STORAGE_PATH};
 
 impl PrintingFile {
@@ -16,7 +16,7 @@ impl PrintingFile {
             _ => FileType::Other
         };
 
-        let file_checksum_sha_256 = Self::file_checksum_sha_256(file_path);
+        let file_checksum_sha_256 = Self::file_checksum_sha_256(file_path).unwrap();
         let file_name = path.file_name().and_then(|x| x.to_str()).unwrap().to_string();
         let mut file_dir = path.parent().and_then(|x| x.to_str()).unwrap().to_string();
         let file_pages_count = Self::count_pages(file_path).unwrap();
@@ -45,25 +45,33 @@ impl PrintingFile {
         let store_file_path = store_dir_path.join(&file_name);
         let current_file_path = Path::new(&file_dir).join(&file_name);
 
-        match copy(&current_file_path, &store_file_path) {
-            Ok(_) =>  {}
+        match rename(&current_file_path, &store_file_path) {
+            Ok(_) => {}
             Err(err) => {
-                eprintln!("Error copying storage dir: {}", err);
+                eprint!("Error moving the file: {}", err);
                 return Err(ErrorCode::FileCopyFailed);
             }
         }
-
-        match remove_file(&current_file_path) {
-            Ok(_) => {}
-            Err(err) => {
-                eprintln!("Can't remove the file from it's old path: {}", err);
-                return Err(ErrorCode::FileRemoveFailed);
-            }
-        }
+        // match copy(&current_file_path, &store_file_path) {
+            // Ok(_) =>  {}
+            // Err(err) => {
+                // eprintln!("Error copying storage dir: {}", err);
+                // return Err(ErrorCode::FileCopyFailed);
+            // }
+        // }
+// 
+        // match remove_file(&current_file_path) {
+            // Ok(_) => {}
+            // Err(err) => {
+                // eprintln!("Can't remove the file from it's old path: {}", err);
+                // return Err(ErrorCode::FileRemoveFailed);
+            // }
+        // }
 
         file_dir = store_dir_path.to_str().unwrap().to_string();
 
-
+        // insert the file and return the PrintingFile object
+        
         let mut client = the_client().unwrap();
 
         let query = "
