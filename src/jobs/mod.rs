@@ -13,7 +13,7 @@ use enums::*;
 #[derive(Debug)]
 pub struct Job {
     pub jop_id: Option<i32>,
-    pub teacher: Customer,
+    pub customer: Customer,
     pub user: User,
     pub jop_added_at_time: Option<PrimitiveDateTime>,
     pub jop_done_at_time: Option<PrimitiveDateTime>,
@@ -49,7 +49,7 @@ impl Job {
             };
         Job {
             jop_id: row.get(0),
-            teacher: Customer {
+            customer: Customer {
                 customer_id: row.get(1),
                 customer_name: row.get(2),
                 customer_phone_number: row.get(3)
@@ -78,10 +78,10 @@ impl Job {
         mem::size_of::<Self>()
     }
 
-    pub fn insert_job(&self) -> Result<(), postgres::Error> {
+    pub fn insert_job(&mut self) -> Result<(), postgres::Error> {
         let query = "
             INSERT INTO jobs(
-                teacher_id,
+                customer_id,
                 user_id,
                 jop_type,
                 file_id,
@@ -93,7 +93,11 @@ impl Job {
                 plank_back_cover,
                 printing_quality
             )
-            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11);
+            VALUES(
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11
+            )
+            RETURNING
+                job_id;
         ";
 
         let mut client = the_client()?;
@@ -103,8 +107,8 @@ impl Job {
             None => {None}
         };
 
-        client.execute(query, &[
-            &self.teacher.customer_id,
+        let row = client.query_one(query, &[
+            &self.customer.customer_id,
             &self.user.id,
             &self.jop_type,
             &file_id,
@@ -115,9 +119,18 @@ impl Job {
             &self.sides,
             &self.plank_back_cover,
             &self.printing_quality
-        ]).expect("Error inserting to jobs");
+        ]);
 
-        Ok(())
+        match row {
+            Ok(r) => {
+                self.jop_id = r.get(0);
+                Ok(())
+            }
+            Err(err) => {
+                eprintln!("Error inserting to jobs");
+                Err(err)
+            }
+        }
 
     }
 }
@@ -126,9 +139,9 @@ pub fn fetch_jobs() -> Result<Vec<Job>, postgres::Error> {
     let query = 
             "SELECT
                 jop_id,
-                teacher_id,
-                teacher_name,
-                teacher_phone_number,
+                customer_id,
+                customer_name,
+                customer_phone_number,
                 user_id,
                 user_full_name,
                 user_name,
@@ -152,7 +165,7 @@ pub fn fetch_jobs() -> Result<Vec<Job>, postgres::Error> {
             FROM
                 jobs
             JOIN
-                teachers USING(teacher_id)
+                customers USING(customer_id)
             JOIN
                 users USING(user_id)
             LEFT JOIN

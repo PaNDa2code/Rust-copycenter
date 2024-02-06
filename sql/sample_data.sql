@@ -26,10 +26,10 @@ INSERT INTO
         file_type, file_checksum_SHA_256, file_name, file_dir, file_pages_count
     )
 VALUES (
-        'pdf', 'd0dc093e68d6b7d8ad3f75bd83bf8dbd3fedc75d14b371b76ed4a828ac542d4d', 'document.pdf', '/path/to/files', 99
+        'pdf', 'checksum1', 'document.pdf', '/path/to/files', 99
     ),
     (
-        'word', 'd0dc093e68d6b7d8ad3f75bd83bf8dbd3fedc75d14b371b76ed4a828ac542d4d', 'report.docx', '/path/to/files', 131
+        'word', 'checksum2', 'report.docx', '/path/to/files', 131
     );
 
 -- Insert data into jobs table
