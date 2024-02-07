@@ -1,8 +1,10 @@
 use crate::config::the_client;
-use crate::{files::*, Customer, User};
+use crate::{files::*, users::{Customer,User}};
 use std::fmt::Debug;
 use std::mem;
-use time::PrimitiveDateTime;
+use serde::Serialize;
+use chrono::NaiveDateTime;
+// use time::PrimitiveDateTime;
 
 mod enums;
 use enums::*;
@@ -10,13 +12,13 @@ use enums::*;
 
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Job {
     pub jop_id: Option<i32>,
     pub customer: Customer,
     pub user: User,
-    pub jop_added_at_time: Option<PrimitiveDateTime>,
-    pub jop_done_at_time: Option<PrimitiveDateTime>,
+    pub jop_added_at_time: Option<NaiveDateTime>,
+    pub jop_done_at_time: Option<NaiveDateTime>,
     pub jop_type: JopType,
     pub jop_done: bool,
     pub file: Option<PrintingFile>,

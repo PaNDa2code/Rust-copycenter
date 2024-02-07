@@ -1,4 +1,5 @@
 use postgres::Error;
+use serde::Serialize;
 use crate::config::the_client;
 
 #[derive(Debug, serde::Serialize)]
@@ -34,7 +35,7 @@ impl User{
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Customer {
     pub customer_id: Option<i32>,
     pub customer_name: String,

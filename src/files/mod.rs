@@ -8,9 +8,10 @@ pub mod errors;
 // use functions::*;
 pub use enums::*;
 pub use new::*;
+use serde::Serialize;
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct PrintingFile {
     pub file_id: i32,
     pub file_type: FileType,

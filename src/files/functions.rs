@@ -1,8 +1,8 @@
 use crate::{config::the_client, files::*};
 use pdf::file::FileOptions;
-use postgres::Error;
+
 use sha256::{self, try_digest};
-use std::{io::Read, path::Path};
+use std::{path::Path};
 
 impl PrintingFile {
     fn from_row(row: &postgres::Row) -> Self {

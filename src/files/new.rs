@@ -1,6 +1,6 @@
 use crate::files::*;
-use crate::errors::ErrorCode;
-use std::{fs::{copy, create_dir, remove_file, rename}, path::Path};
+use self::errors::ErrorCode;
+use std::{fs::{create_dir, rename}, path::Path};
 use crate::{config::the_client, config::STORAGE_PATH};
 
 impl PrintingFile {
