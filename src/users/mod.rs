@@ -1,15 +1,15 @@
+use crate::config::the_client;
 use postgres::Error;
 use serde::Serialize;
-use crate::config::the_client;
 
 #[derive(Debug, serde::Serialize)]
 pub struct User {
-        pub id: i32,
-        pub full_name: String,
-        pub username: String,
-    }
+    pub id: i32,
+    pub full_name: String,
+    pub username: String,
+}
 
-impl User{
+impl User {
     fn from_row(qr: &postgres::Row) -> User {
         User {
             id: qr.get(0),
@@ -39,9 +39,8 @@ impl User{
 pub struct Customer {
     pub customer_id: Option<i32>,
     pub customer_name: String,
-    pub customer_phone_number: String
+    pub customer_phone_number: String,
 }
-
 
 pub fn fetch_users() -> Result<Vec<User>, Error> {
     let mut client = the_client()?;
@@ -49,4 +48,3 @@ pub fn fetch_users() -> Result<Vec<User>, Error> {
     let users: Vec<User> = rows.iter().map(|row| User::from_row(row)).collect();
     Ok(users)
 }
-

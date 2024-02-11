@@ -1,4 +1,4 @@
-use postgres_types::{ToSql, FromSql};
+use postgres_types::{FromSql, ToSql};
 use serde::Serialize;
 
 #[derive(Debug, ToSql, FromSql, Serialize)]
@@ -7,7 +7,7 @@ pub enum JopType {
     #[postgres(name = "printing")]
     Printing,
     #[postgres(name = "copying")]
-    Copying
+    Copying,
 }
 
 #[derive(Debug, ToSql, FromSql, Serialize)]
@@ -16,7 +16,7 @@ pub enum Sides {
     #[postgres(name = "one-side")]
     OneSide,
     #[postgres(name = "two-sides")]
-    TwoSides
+    TwoSides,
 }
 
 #[derive(Debug, ToSql, FromSql, Serialize)]
@@ -25,7 +25,7 @@ pub enum PaperWight {
     #[postgres(name = "70g")]
     G70,
     #[postgres(name = "80g")]
-    G80
+    G80,
 }
 
 #[derive(Debug, ToSql, FromSql, Serialize)]
@@ -34,5 +34,5 @@ pub enum PrintingQuality {
     #[postgres(name = "standard")]
     HighQuality,
     #[postgres(name = "high-quality")]
-    Standard
+    Standard,
 }

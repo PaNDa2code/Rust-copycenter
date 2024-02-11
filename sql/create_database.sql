@@ -29,7 +29,7 @@ CREATE TABLE files (
   file_type file_type,
   file_checksum_SHA_256 varchar(64) UNIQUE,
   file_name varchar(50),
-  file_dir varchar(150),
+  file_dir varchar(200),
   file_pages_count int
 );
 

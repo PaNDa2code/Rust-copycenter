@@ -1,16 +1,16 @@
 use crate::config::the_client;
-use crate::{files::*, users::{Customer,User}};
+use crate::{
+    files::*,
+    users::{Customer, User},
+};
+use chrono::NaiveDateTime;
+use serde::Serialize;
 use std::fmt::Debug;
 use std::mem;
-use serde::Serialize;
-use chrono::NaiveDateTime;
 // use time::PrimitiveDateTime;
 
 mod enums;
 use enums::*;
-
-
-
 
 #[derive(Debug, Serialize)]
 pub struct Job {
@@ -31,35 +31,31 @@ pub struct Job {
     pub printing_quality: PrintingQuality,
 }
 
-
 impl Job {
     pub fn from_row(row: &postgres::Row) -> Self {
         let file_id: Option<i32> = row.get(11);
-        let file: Option<PrintingFile> =
-            match file_id {
-                Some(id) => {
-                    Some(PrintingFile {
-                        file_id: id,
-                        file_name: row.get(12),
-                        file_checksum_sha_256: row.get(13),
-                        file_type: row.get(14),
-                        file_dir: row.get(15),
-                        file_pages_count: row.get(16),
-                    })
-                },
-                None => None, // Handle the case when file_id is None (NULL in the database)
-            };
+        let file: Option<PrintingFile> = match file_id {
+            Some(id) => Some(PrintingFile {
+                file_id: id,
+                file_name: row.get(12),
+                file_checksum_sha_256: row.get(13),
+                file_type: row.get(14),
+                file_dir: row.get(15),
+                file_pages_count: row.get(16),
+            }),
+            None => None, // Handle the case when file_id is None (NULL in the database)
+        };
         Job {
             jop_id: row.get(0),
             customer: Customer {
                 customer_id: row.get(1),
                 customer_name: row.get(2),
-                customer_phone_number: row.get(3)
+                customer_phone_number: row.get(3),
             },
             user: User {
                 id: row.get(4),
                 full_name: row.get(5),
-                username: row.get(6)
+                username: row.get(6),
             },
             jop_added_at_time: row.get(7),
             jop_done_at_time: row.get(8),
@@ -72,7 +68,7 @@ impl Job {
             plank_back_cover: row.get(20),
             printing_quality: row.get(21),
             pages_per_sheet: row.get(22),
-            copies_count: row.get(23)
+            copies_count: row.get(23),
         }
     }
 
@@ -103,25 +99,28 @@ impl Job {
         ";
 
         let mut client = the_client()?;
-        
+
         let file_id = match &self.file {
-            Some(file) => {Some(file.file_id)}
-            None => {None}
+            Some(file) => Some(file.file_id),
+            None => None,
         };
 
-        let row = client.query_one(query, &[
-            &self.customer.customer_id,
-            &self.user.id,
-            &self.jop_type,
-            &file_id,
-            &self.pages_per_sheet,
-            &self.paper_wight,
-            &self.copies_count,
-            &self.paper_count,
-            &self.sides,
-            &self.plank_back_cover,
-            &self.printing_quality
-        ]);
+        let row = client.query_one(
+            query,
+            &[
+                &self.customer.customer_id,
+                &self.user.id,
+                &self.jop_type,
+                &file_id,
+                &self.pages_per_sheet,
+                &self.paper_wight,
+                &self.copies_count,
+                &self.paper_count,
+                &self.sides,
+                &self.plank_back_cover,
+                &self.printing_quality,
+            ],
+        );
 
         match row {
             Ok(r) => {
@@ -133,13 +132,11 @@ impl Job {
                 Err(err)
             }
         }
-
     }
 }
 
 pub fn fetch_jobs() -> Result<Vec<Job>, postgres::Error> {
-    let query = 
-            "SELECT
+    let query = "SELECT
                 jop_id,
                 customer_id,
                 customer_name,
@@ -171,13 +168,15 @@ pub fn fetch_jobs() -> Result<Vec<Job>, postgres::Error> {
             JOIN
                 users USING(user_id)
             LEFT JOIN
-                files USING(file_id);
-            ";  
+                files USING(file_id)
+            WHERE
+                jop_done_at_time IS null
+            ORDER BY
+                jop_added_at_time;
+            ";
     let mut client = the_client()?;
     let rows = client.query(query, &[])?;
     let jobs: Vec<Job> = rows.iter().map(|row| Job::from_row(row)).collect();
 
     Ok(jobs)
 }
-
-

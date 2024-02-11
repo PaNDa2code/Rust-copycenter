@@ -1,7 +1,10 @@
-use crate::files::*;
 use self::errors::ErrorCode;
-use std::{fs::{create_dir, rename}, path::Path};
+use crate::files::*;
 use crate::{config::the_client, config::STORAGE_PATH};
+use std::{
+    fs::{create_dir, rename},
+    path::Path,
+};
 
 impl PrintingFile {
     pub fn new(file_path: &str) -> Result<Self, ErrorCode> {
@@ -13,32 +16,47 @@ impl PrintingFile {
             "pdf" => FileType::PDF,
             "docx" => FileType::Word,
             "jpg" | "jpeg" => FileType::Image,
-            _ => FileType::Other
+            _ => FileType::Other,
         };
 
         let file_checksum_sha_256 = Self::file_checksum_sha_256(file_path).unwrap();
-        let file_name = path.file_name().and_then(|x| x.to_str()).unwrap().to_string();
+        let file_name = path
+            .file_name()
+            .and_then(|x| x.to_str())
+            .unwrap()
+            .to_string();
         let mut file_dir = path.parent().and_then(|x| x.to_str()).unwrap().to_string();
         let file_pages_count = Self::count_pages(file_path).unwrap();
 
-
         let file_check = Self::file_by_checksum(&file_checksum_sha_256);
 
-        if file_check.is_some() {
-            let file = file_check.unwrap();
-            eprintln!("Error: File is already there ==> {:?}", file);
-            return Err(ErrorCode::FileAlreadyExists);
-        }
-
+        match file_check {
+            Ok(ff) => {
+                match ff {
+                    Some(file) => {
+                        eprintln!("Error: File is already there ==> {:?}", file);
+                        return Err(ErrorCode::FileAlreadyExists);
+                    }
+                    None => {
+                        // No file found, continue with the rest of the logic
+                    }
+                }
+            }
+            Err(err) => {
+                // Handle the postgres::Error appropriately
+                return Err(ErrorCode::ClientConnectError(err));
+            }
+        };
         // move the file to the storage
 
         let store_dir = format!("{}/{}", STORAGE_PATH, file_checksum_sha_256);
+        println!("{}", store_dir);
         let store_dir_path = Path::new(&store_dir);
         match create_dir(&store_dir_path) {
             Ok(_) => {}
             Err(err) => {
                 eprintln!("Error creating storage dir: {}", err);
-                return Err(ErrorCode::StorageDirCreationFailed);
+                return Err(ErrorCode::StorageDirCreationFailed(err));
             }
         }
 
@@ -49,29 +67,29 @@ impl PrintingFile {
             Ok(_) => {}
             Err(err) => {
                 eprint!("Error moving the file: {}", err);
-                return Err(ErrorCode::FileCopyFailed);
+                return Err(ErrorCode::FileMoveFailed(err));
             }
         }
         // match copy(&current_file_path, &store_file_path) {
-            // Ok(_) =>  {}
-            // Err(err) => {
-                // eprintln!("Error copying storage dir: {}", err);
-                // return Err(ErrorCode::FileCopyFailed);
-            // }
+        // Ok(_) =>  {}
+        // Err(err) => {
+        // eprintln!("Error copying storage dir: {}", err);
+        // return Err(ErrorCode::FileCopyFailed);
         // }
-// 
+        // }
+        //
         // match remove_file(&current_file_path) {
-            // Ok(_) => {}
-            // Err(err) => {
-                // eprintln!("Can't remove the file from it's old path: {}", err);
-                // return Err(ErrorCode::FileRemoveFailed);
-            // }
+        // Ok(_) => {}
+        // Err(err) => {
+        // eprintln!("Can't remove the file from it's old path: {}", err);
+        // return Err(ErrorCode::FileRemoveFailed);
+        // }
         // }
 
         file_dir = store_dir_path.to_str().unwrap().to_string();
 
         // insert the file and return the PrintingFile object
-        
+
         let mut client = the_client().unwrap();
 
         let query = "
@@ -86,32 +104,30 @@ impl PrintingFile {
                 file_id
             ;
         ";
-        let row = client.query_one(query, &[
-            &file_name,
-            &file_type,
-            &file_dir,
-            &file_checksum_sha_256,
-            &file_pages_count
-        ]);
+        let row = client.query_one(
+            query,
+            &[
+                &file_name,
+                &file_type,
+                &file_dir,
+                &file_checksum_sha_256,
+                &file_pages_count,
+            ],
+        );
 
         match row {
-            Ok(r) => {
-                Ok(
-                    PrintingFile{
-                        file_id: r.get(0),
-                        file_name,
-                        file_dir,
-                        file_checksum_sha_256,
-                        file_type,
-                        file_pages_count
-                    }
-                )
-            }
+            Ok(r) => Ok(PrintingFile {
+                file_id: r.get(0),
+                file_name,
+                file_dir,
+                file_checksum_sha_256,
+                file_type,
+                file_pages_count,
+            }),
             Err(err) => {
                 eprintln!("Error retrieving the row: {}", err);
-                Err(ErrorCode::RowRetrievalFailed)
+                Err(ErrorCode::RowRetrievalFailed(err))
             }
         }
-        
     }
 }

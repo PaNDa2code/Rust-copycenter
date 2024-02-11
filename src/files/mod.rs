@@ -1,15 +1,12 @@
 mod enums;
+pub mod errors;
 mod functions;
 mod new;
-pub mod errors;
-
-
 
 // use functions::*;
 pub use enums::*;
 pub use new::*;
 use serde::Serialize;
-
 
 #[derive(Debug, Serialize)]
 pub struct PrintingFile {
@@ -18,6 +15,5 @@ pub struct PrintingFile {
     pub file_checksum_sha_256: String,
     pub file_name: String,
     pub file_dir: String,
-    pub file_pages_count: i32
+    pub file_pages_count: i32,
 }
-
